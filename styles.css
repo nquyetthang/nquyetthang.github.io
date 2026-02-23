@@ -96,13 +96,79 @@ button {
   font-weight: 600;
 }
 
-#finishBtn {
-  background: #0d8a45;
-}
-
 button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.ai-panel {
+  margin-top: 20px;
+  border: 1px solid #d4dffb;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f9fbff;
+}
+
+.ai-panel h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+#aiSearchInput {
+  width: 100%;
+  border: 1px solid #c7d7ff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.ai-messages {
+  height: 220px;
+  overflow-y: auto;
+  border: 1px solid #dce5ff;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-message {
+  max-width: 85%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.ai-message.user {
+  align-self: flex-end;
+  background: #2157d8;
+  color: #fff;
+}
+
+.ai-message.bot {
+  align-self: flex-start;
+  background: #edf2ff;
+  color: #1a2a57;
+}
+
+.ai-compose {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+#aiUserInput {
+  border: 1px solid #c7d7ff;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+#realAiBtn {
+  background: #0d8a45;
 }
 
 @media (max-width: 600px) {
@@ -112,5 +178,9 @@ button:disabled {
 
   button {
     width: 100%;
+  }
+
+  .ai-compose {
+    grid-template-columns: 1fr;
   }
 }

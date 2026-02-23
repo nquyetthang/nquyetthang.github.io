@@ -23,12 +23,23 @@
             <button id="replayBtn" type="button">Đọc lại</button>
             <button id="toggleAnswerBtn" type="button">Hiện đáp án</button>
             <button id="nextBtn" type="button">Câu tiếp</button>
-            <button id="finishBtn" type="button" class="hidden">Hoàn thành</button>
+            <button id="realAiBtn" type="button" class="hidden">Real AI</button>
           </div>
         </div>
+
+        <section id="aiPanel" class="ai-panel hidden">
+          <h3>AI Chat</h3>
+          <input id="aiSearchInput" type="search" placeholder="Search..." />
+          <div id="aiMessages" class="ai-messages"></div>
+          <div class="ai-compose">
+            <input id="aiUserInput" type="text" placeholder="Nhập câu hỏi của bạn..." />
+            <button id="aiSendBtn" type="button">Gửi</button>
+          </div>
+        </section>
       </section>
     </main>
 
+    <script src="./config.js"></script>
     <script src="./script.js"></script>
   </body>
 </html>

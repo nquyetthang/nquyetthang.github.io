@@ -52,7 +52,8 @@ const quizQuestions = [
 ];
 
 // Replace with your own voice file path, for example: "./audio/my-voice.mp3"
-const END_AUDIO_SRC = "./University of Nottingham - Jubilee Campus.m4a";
+const END_AUDIO_SRC = "";
+const CHAT_API_URL = window.APP_CONFIG?.CHAT_API_URL || "";
 
 const counterEl = document.getElementById("counter");
 const questionEl = document.getElementById("question");
@@ -63,12 +64,24 @@ const prevBtn = document.getElementById("prevBtn");
 const replayBtn = document.getElementById("replayBtn");
 const toggleAnswerBtn = document.getElementById("toggleAnswerBtn");
 const nextBtn = document.getElementById("nextBtn");
-const finishBtn = document.getElementById("finishBtn");
+const realAiBtn = document.getElementById("realAiBtn");
+const aiPanel = document.getElementById("aiPanel");
+const aiSearchInput = document.getElementById("aiSearchInput");
+const aiMessages = document.getElementById("aiMessages");
+const aiUserInput = document.getElementById("aiUserInput");
+const aiSendBtn = document.getElementById("aiSendBtn");
 
 let index = 0;
 let showAnswer = false;
-let isCompleted = false;
 const endAudio = new Audio(END_AUDIO_SRC);
+const chatHistory = [];
+let isSending = false;
+
+function resolveChatApiUrl(rawUrl) {
+  const base = String(rawUrl || "").trim();
+  if (!base) return "";
+  return base.endsWith("/api/chat") ? base : `${base.replace(/\/+$/, "")}/api/chat`;
+}
 
 function buildSpeechText(question) {
   const optionsText = question.options
@@ -93,22 +106,21 @@ function speakQuestion(question) {
   window.speechSynthesis.speak(utterance);
 }
 
+async function playEndAudio() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  endAudio.currentTime = 0;
+  try {
+    await endAudio.play();
+  } catch (_error) {
+    alert("Không thể phát file giọng nói. Hãy kiểm tra END_AUDIO_SRC trong script.js.");
+  }
+}
+
 function render() {
   const currentQuestion = quizQuestions[index];
-
-  if (isCompleted) {
-    counterEl.textContent = "Đã hoàn thành";
-    questionEl.textContent = "Bạn đã làm xong tất cả câu hỏi.";
-    optionsEl.innerHTML = "";
-    answerEl.classList.add("hidden");
-
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
-    replayBtn.disabled = true;
-    toggleAnswerBtn.disabled = true;
-    finishBtn.classList.add("hidden");
-    return;
-  }
 
   counterEl.textContent = `Câu ${index + 1}/${quizQuestions.length}`;
   questionEl.textContent = currentQuestion.question;
@@ -126,9 +138,73 @@ function render() {
 
   prevBtn.disabled = index === 0;
   nextBtn.disabled = index === quizQuestions.length - 1;
-  finishBtn.classList.toggle("hidden", index !== quizQuestions.length - 1);
+  const isLastQuestion = index === quizQuestions.length - 1;
+  realAiBtn.classList.toggle("hidden", !(isLastQuestion && showAnswer));
 
   speakQuestion(currentQuestion);
+}
+
+function appendAiMessage(role, text) {
+  const item = document.createElement("div");
+  item.className = `ai-message ${role}`;
+  item.textContent = text;
+  aiMessages.appendChild(item);
+  aiMessages.scrollTop = aiMessages.scrollHeight;
+}
+
+async function sendUserMessage() {
+  if (isSending) return;
+
+  const text = aiUserInput.value.trim();
+  if (!text) return;
+
+  appendAiMessage("user", text);
+  aiUserInput.value = "";
+  chatHistory.push({ role: "user", content: text });
+
+  const loadingEl = document.createElement("div");
+  loadingEl.className = "ai-message bot";
+  loadingEl.textContent = "Đang trả lời...";
+  aiMessages.appendChild(loadingEl);
+  aiMessages.scrollTop = aiMessages.scrollHeight;
+
+  isSending = true;
+  aiSendBtn.disabled = true;
+
+  try {
+    const chatApiUrl = resolveChatApiUrl(CHAT_API_URL);
+    if (!chatApiUrl) {
+      throw new Error("Chưa cấu hình CHAT_API_URL trong config.js.");
+    }
+
+    const response = await fetch(chatApiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text,
+        searchQuery: aiSearchInput.value.trim(),
+        history: chatHistory
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Lỗi không xác định từ server.");
+    }
+
+    loadingEl.remove();
+    const replyText = data.reply || "Xin lỗi, tôi chưa có câu trả lời.";
+    appendAiMessage("bot", replyText);
+    chatHistory.push({ role: "assistant", content: replyText });
+  } catch (error) {
+    loadingEl.remove();
+    const errorMessage = error instanceof Error ? error.message : "Không gọi được API chat.";
+    appendAiMessage("bot", `Lỗi: ${errorMessage}`);
+  } finally {
+    isSending = false;
+    aiSendBtn.disabled = false;
+    aiUserInput.focus();
+  }
 }
 
 prevBtn.addEventListener("click", () => {
@@ -147,24 +223,6 @@ nextBtn.addEventListener("click", () => {
   }
 });
 
-finishBtn.addEventListener("click", async () => {
-  if (index !== quizQuestions.length - 1 || isCompleted) return;
-
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
-
-  try {
-    await endAudio.play();
-  } catch (_error) {
-    alert("Không thể phát file giọng nói. Hãy kiểm tra END_AUDIO_SRC trong script.js.");
-    return;
-  }
-
-  isCompleted = true;
-  render();
-});
-
 replayBtn.addEventListener("click", () => {
   speakQuestion(quizQuestions[index]);
 });
@@ -173,6 +231,30 @@ toggleAnswerBtn.addEventListener("click", () => {
   showAnswer = !showAnswer;
   answerEl.classList.toggle("hidden", !showAnswer);
   toggleAnswerBtn.textContent = showAnswer ? "Ẩn đáp án" : "Hiện đáp án";
+
+  const isLastQuestion = index === quizQuestions.length - 1;
+  if (showAnswer && isLastQuestion) {
+    realAiBtn.classList.remove("hidden");
+    playEndAudio();
+  } else if (!showAnswer) {
+    realAiBtn.classList.add("hidden");
+  }
+});
+
+realAiBtn.addEventListener("click", () => {
+  aiPanel.classList.remove("hidden");
+  if (!aiMessages.hasChildNodes()) {
+    appendAiMessage("bot", "Xin chào, tôi là Real AI demo. Bạn có thể nhập câu hỏi bên dưới.");
+  }
+  aiUserInput.focus();
+});
+
+aiSendBtn.addEventListener("click", sendUserMessage);
+
+aiUserInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    sendUserMessage();
+  }
 });
 
 window.speechSynthesis.addEventListener("voiceschanged", () => {
