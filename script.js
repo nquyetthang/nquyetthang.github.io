@@ -51,166 +51,90 @@ const quizQuestions = [
   }
 ];
 
-// Replace with your own voice file path, for example: "./audio/my-voice.mp3"
-const END_AUDIO_SRC = "";
-const CHAT_API_URL = window.APP_CONFIG?.CHAT_API_URL || "";
+const questionVideos = [
+  "./question1.mp4",
+  "./question2.mp4",
+  "./question3.mp4",
+  "./question4.mp4",
+  "./question5.mp4"
+];
 
 const counterEl = document.getElementById("counter");
+const videoWrapEl = document.getElementById("videoWrap");
+const questionVideoEl = document.getElementById("questionVideo");
 const questionEl = document.getElementById("question");
 const optionsEl = document.getElementById("options");
-const answerEl = document.getElementById("answer");
 
 const prevBtn = document.getElementById("prevBtn");
 const replayBtn = document.getElementById("replayBtn");
-const toggleAnswerBtn = document.getElementById("toggleAnswerBtn");
 const nextBtn = document.getElementById("nextBtn");
-const realAiBtn = document.getElementById("realAiBtn");
-const aiPanel = document.getElementById("aiPanel");
-const aiSearchInput = document.getElementById("aiSearchInput");
-const aiMessages = document.getElementById("aiMessages");
-const aiUserInput = document.getElementById("aiUserInput");
-const aiSendBtn = document.getElementById("aiSendBtn");
 
 let index = 0;
-let showAnswer = false;
-const endAudio = new Audio(END_AUDIO_SRC);
-const chatHistory = [];
-let isSending = false;
-
-function resolveChatApiUrl(rawUrl) {
-  const base = String(rawUrl || "").trim();
-  if (!base) return "";
-  return base.endsWith("/api/chat") ? base : `${base.replace(/\/+$/, "")}/api/chat`;
-}
-
-function buildSpeechText(question) {
-  const optionsText = question.options
-    .map((option) => `${option.label}. ${option.text}`)
-    .join(". ");
-  return `${question.question}. ${optionsText}`;
-}
-
-function speakQuestion(question) {
-  if (!("speechSynthesis" in window)) return;
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(buildSpeechText(question));
-  utterance.lang = "vi-VN";
-  utterance.rate = 1;
-
-  const voices = window.speechSynthesis.getVoices();
-  const viVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith("vi"));
-  if (viVoice) utterance.voice = viVoice;
-
-  window.speechSynthesis.speak(utterance);
-}
-
-async function playEndAudio() {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
-
-  endAudio.currentTime = 0;
-  try {
-    await endAudio.play();
-  } catch (_error) {
-    alert("Không thể phát file giọng nói. Hãy kiểm tra END_AUDIO_SRC trong script.js.");
-  }
-}
+let lastRenderedQuestionIndex = -1;
+const selectedAnswers = new Array(quizQuestions.length).fill(null);
 
 function render() {
   const currentQuestion = quizQuestions[index];
+  const currentVideo = questionVideos[index] || "";
+  const selectedLabel = selectedAnswers[index];
+  const isQuestionChanged = lastRenderedQuestionIndex !== index;
 
   counterEl.textContent = `Câu ${index + 1}/${quizQuestions.length}`;
+
+  if (currentVideo) {
+    videoWrapEl.classList.remove("hidden");
+    if (isQuestionChanged) {
+      questionVideoEl.src = currentVideo;
+      questionVideoEl.load();
+      questionVideoEl.currentTime = 0;
+      questionVideoEl.play().catch(() => {
+        // Autoplay can be blocked by browser policy.
+      });
+    }
+  } else {
+    if (isQuestionChanged) {
+      questionVideoEl.pause();
+      questionVideoEl.removeAttribute("src");
+      questionVideoEl.load();
+      videoWrapEl.classList.add("hidden");
+    }
+  }
+
   questionEl.textContent = currentQuestion.question;
 
   optionsEl.innerHTML = "";
   currentQuestion.options.forEach((option) => {
     const li = document.createElement("li");
-    li.innerHTML = `<span class="option-label">${option.label}.</span> ${option.text}`;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "option-btn";
+    button.innerHTML = `<span class="option-label">${option.label}.</span> ${option.text}`;
+
+    if (selectedLabel) {
+      button.disabled = true;
+      if (selectedLabel === option.label) {
+        const isCorrect = selectedLabel === currentQuestion.answer;
+        button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+      }
+    } else {
+      button.addEventListener("click", () => {
+        selectedAnswers[index] = option.label;
+        render();
+      });
+    }
+
+    li.appendChild(button);
     optionsEl.appendChild(li);
   });
 
-  answerEl.textContent = `Đáp án: ${currentQuestion.answer}`;
-  answerEl.classList.toggle("hidden", !showAnswer);
-  toggleAnswerBtn.textContent = showAnswer ? "Ẩn đáp án" : "Hiện đáp án";
-
   prevBtn.disabled = index === 0;
   nextBtn.disabled = index === quizQuestions.length - 1;
-  const isLastQuestion = index === quizQuestions.length - 1;
-  realAiBtn.classList.toggle("hidden", !(isLastQuestion && showAnswer));
-
-  speakQuestion(currentQuestion);
-}
-
-function appendAiMessage(role, text) {
-  const item = document.createElement("div");
-  item.className = `ai-message ${role}`;
-  item.textContent = text;
-  aiMessages.appendChild(item);
-  aiMessages.scrollTop = aiMessages.scrollHeight;
-}
-
-async function sendUserMessage() {
-  if (isSending) return;
-
-  const text = aiUserInput.value.trim();
-  if (!text) return;
-
-  appendAiMessage("user", text);
-  aiUserInput.value = "";
-  chatHistory.push({ role: "user", content: text });
-
-  const loadingEl = document.createElement("div");
-  loadingEl.className = "ai-message bot";
-  loadingEl.textContent = "Đang trả lời...";
-  aiMessages.appendChild(loadingEl);
-  aiMessages.scrollTop = aiMessages.scrollHeight;
-
-  isSending = true;
-  aiSendBtn.disabled = true;
-
-  try {
-    const chatApiUrl = resolveChatApiUrl(CHAT_API_URL);
-    if (!chatApiUrl) {
-      throw new Error("Chưa cấu hình CHAT_API_URL trong config.js.");
-    }
-
-    const response = await fetch(chatApiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: text,
-        searchQuery: aiSearchInput.value.trim(),
-        history: chatHistory
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || "Lỗi không xác định từ server.");
-    }
-
-    loadingEl.remove();
-    const replyText = data.reply || "Xin lỗi, tôi chưa có câu trả lời.";
-    appendAiMessage("bot", replyText);
-    chatHistory.push({ role: "assistant", content: replyText });
-  } catch (error) {
-    loadingEl.remove();
-    const errorMessage = error instanceof Error ? error.message : "Không gọi được API chat.";
-    appendAiMessage("bot", `Lỗi: ${errorMessage}`);
-  } finally {
-    isSending = false;
-    aiSendBtn.disabled = false;
-    aiUserInput.focus();
-  }
+  lastRenderedQuestionIndex = index;
 }
 
 prevBtn.addEventListener("click", () => {
   if (index > 0) {
     index -= 1;
-    showAnswer = false;
     render();
   }
 });
@@ -218,55 +142,20 @@ prevBtn.addEventListener("click", () => {
 nextBtn.addEventListener("click", () => {
   if (index < quizQuestions.length - 1) {
     index += 1;
-    showAnswer = false;
     render();
   }
 });
 
 replayBtn.addEventListener("click", () => {
-  speakQuestion(quizQuestions[index]);
-});
-
-toggleAnswerBtn.addEventListener("click", () => {
-  showAnswer = !showAnswer;
-  answerEl.classList.toggle("hidden", !showAnswer);
-  toggleAnswerBtn.textContent = showAnswer ? "Ẩn đáp án" : "Hiện đáp án";
-
-  const isLastQuestion = index === quizQuestions.length - 1;
-  if (showAnswer && isLastQuestion) {
-    realAiBtn.classList.remove("hidden");
-    playEndAudio();
-  } else if (!showAnswer) {
-    realAiBtn.classList.add("hidden");
-  }
-});
-
-realAiBtn.addEventListener("click", () => {
-  aiPanel.classList.remove("hidden");
-  if (!aiMessages.hasChildNodes()) {
-    appendAiMessage("bot", "Xin chào, tôi là Real AI demo. Bạn có thể nhập câu hỏi bên dưới.");
-  }
-  aiUserInput.focus();
-});
-
-aiSendBtn.addEventListener("click", sendUserMessage);
-
-aiUserInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    sendUserMessage();
-  }
-});
-
-window.speechSynthesis.addEventListener("voiceschanged", () => {
-  render();
+  if (!questionVideoEl.getAttribute("src")) return;
+  questionVideoEl.currentTime = 0;
+  questionVideoEl.play().catch(() => {
+    // Playback can fail if browser blocks autoplay.
+  });
 });
 
 window.addEventListener("beforeunload", () => {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
-  endAudio.pause();
-  endAudio.currentTime = 0;
+  questionVideoEl.pause();
 });
 
 render();

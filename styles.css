@@ -44,6 +44,18 @@ h1 {
   color: #2d4ea6;
 }
 
+.video-wrap {
+  margin: 10px 0 14px;
+}
+
+.question-video {
+  width: 100%;
+  max-height: 340px;
+  border-radius: 12px;
+  border: 1px solid #d4dffb;
+  background: #000;
+}
+
 .question {
   margin-top: 8px;
   margin-bottom: 16px;
@@ -59,20 +71,44 @@ h1 {
 }
 
 .option-list li {
-  border: 1px solid #d4dffb;
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: #f7faff;
+  list-style: none;
 }
 
 .option-label {
   font-weight: 700;
 }
 
-.answer {
-  margin-top: 16px;
-  font-weight: 700;
-  color: #1f6b3e;
+.option-btn {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #d4dffb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f7faff;
+  color: #1f2937;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.option-btn:hover {
+  background: #ecf3ff;
+}
+
+.option-btn.is-correct {
+  background: #d7f7e5;
+  border-color: #47b881;
+  color: #0b5a35;
+}
+
+.option-btn.is-wrong {
+  background: #ffe2e2;
+  border-color: #e25d5d;
+  color: #8d1f1f;
+}
+
+.option-btn:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .hidden {
@@ -101,76 +137,6 @@ button:disabled {
   opacity: 0.45;
 }
 
-.ai-panel {
-  margin-top: 20px;
-  border: 1px solid #d4dffb;
-  border-radius: 12px;
-  padding: 14px;
-  background: #f9fbff;
-}
-
-.ai-panel h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-#aiSearchInput {
-  width: 100%;
-  border: 1px solid #c7d7ff;
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-}
-
-.ai-messages {
-  height: 220px;
-  overflow-y: auto;
-  border: 1px solid #dce5ff;
-  border-radius: 10px;
-  background: #fff;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ai-message {
-  max-width: 85%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  line-height: 1.35;
-  white-space: pre-wrap;
-}
-
-.ai-message.user {
-  align-self: flex-end;
-  background: #2157d8;
-  color: #fff;
-}
-
-.ai-message.bot {
-  align-self: flex-start;
-  background: #edf2ff;
-  color: #1a2a57;
-}
-
-.ai-compose {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-}
-
-#aiUserInput {
-  border: 1px solid #c7d7ff;
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-
-#realAiBtn {
-  background: #0d8a45;
-}
-
 @media (max-width: 600px) {
   .card {
     padding: 16px;
@@ -178,9 +144,5 @@ button:disabled {
 
   button {
     width: 100%;
-  }
-
-  .ai-compose {
-    grid-template-columns: 1fr;
   }
 }
