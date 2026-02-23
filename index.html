@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trắc nghiệm giọng nói</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card">
+        <h1>Trắc nghiệm đọc bằng giọng máy</h1>
+        <p>Mỗi lần chuyển câu hỏi, hệ thống sẽ tự động đọc tiếng Việt.</p>
+
+        <div class="quiz-wrap">
+          <p id="counter" class="counter"></p>
+          <h2 id="question" class="question"></h2>
+          <ul id="options" class="option-list"></ul>
+          <p id="answer" class="answer hidden"></p>
+
+          <div class="actions">
+            <button id="prevBtn" type="button">Câu trước</button>
+            <button id="replayBtn" type="button">Đọc lại</button>
+            <button id="toggleAnswerBtn" type="button">Hiện đáp án</button>
+            <button id="nextBtn" type="button">Câu tiếp</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
