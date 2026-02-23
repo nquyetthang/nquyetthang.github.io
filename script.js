@@ -51,6 +51,9 @@ const quizQuestions = [
   }
 ];
 
+// Replace with your own voice file path, for example: "./audio/my-voice.mp3"
+const END_AUDIO_SRC = "./University of Nottingham - Jubilee Campus.m4a";
+
 const counterEl = document.getElementById("counter");
 const questionEl = document.getElementById("question");
 const optionsEl = document.getElementById("options");
@@ -60,9 +63,12 @@ const prevBtn = document.getElementById("prevBtn");
 const replayBtn = document.getElementById("replayBtn");
 const toggleAnswerBtn = document.getElementById("toggleAnswerBtn");
 const nextBtn = document.getElementById("nextBtn");
+const finishBtn = document.getElementById("finishBtn");
 
 let index = 0;
 let showAnswer = false;
+let isCompleted = false;
+const endAudio = new Audio(END_AUDIO_SRC);
 
 function buildSpeechText(question) {
   const optionsText = question.options
@@ -90,6 +96,20 @@ function speakQuestion(question) {
 function render() {
   const currentQuestion = quizQuestions[index];
 
+  if (isCompleted) {
+    counterEl.textContent = "Đã hoàn thành";
+    questionEl.textContent = "Bạn đã làm xong tất cả câu hỏi.";
+    optionsEl.innerHTML = "";
+    answerEl.classList.add("hidden");
+
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    replayBtn.disabled = true;
+    toggleAnswerBtn.disabled = true;
+    finishBtn.classList.add("hidden");
+    return;
+  }
+
   counterEl.textContent = `Câu ${index + 1}/${quizQuestions.length}`;
   questionEl.textContent = currentQuestion.question;
 
@@ -106,6 +126,7 @@ function render() {
 
   prevBtn.disabled = index === 0;
   nextBtn.disabled = index === quizQuestions.length - 1;
+  finishBtn.classList.toggle("hidden", index !== quizQuestions.length - 1);
 
   speakQuestion(currentQuestion);
 }
@@ -126,6 +147,24 @@ nextBtn.addEventListener("click", () => {
   }
 });
 
+finishBtn.addEventListener("click", async () => {
+  if (index !== quizQuestions.length - 1 || isCompleted) return;
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  try {
+    await endAudio.play();
+  } catch (_error) {
+    alert("Không thể phát file giọng nói. Hãy kiểm tra END_AUDIO_SRC trong script.js.");
+    return;
+  }
+
+  isCompleted = true;
+  render();
+});
+
 replayBtn.addEventListener("click", () => {
   speakQuestion(quizQuestions[index]);
 });
@@ -144,6 +183,8 @@ window.addEventListener("beforeunload", () => {
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
+  endAudio.pause();
+  endAudio.currentTime = 0;
 });
 
 render();
