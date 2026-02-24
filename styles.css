@@ -64,6 +64,13 @@ h1 {
   min-width: 0;
 }
 
+#introSection video {
+  display: block !important;
+  inline-size: 100% !important;
+  max-inline-size: 100% !important;
+  block-size: auto !important;
+}
+
 .intro-hint {
   margin: 0;
   color: #2d4ea6;
