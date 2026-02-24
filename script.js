@@ -54,18 +54,11 @@ const quizQuestions = [
 const counterEl = document.getElementById("counter");
 const questionEl = document.getElementById("question");
 const optionsEl = document.getElementById("options");
-const introSectionEl = document.getElementById("introSection");
-const quizSectionEl = document.getElementById("quizSection");
-const introVideoEl = document.getElementById("introVideo");
-const introHintEl = document.getElementById("introHint");
-const startQuizBtn = document.getElementById("startQuizBtn");
-
 const prevBtn = document.getElementById("prevBtn");
 const replayBtn = document.getElementById("replayBtn");
 const nextBtn = document.getElementById("nextBtn");
 
 let index = 0;
-let hasStartedQuiz = false;
 const selectedAnswers = new Array(quizQuestions.length).fill(null);
 
 function buildSpeechText(question) {
@@ -112,6 +105,9 @@ function render(shouldSpeak = true) {
         const isCorrect = selectedLabel === currentQuestion.answer;
         button.classList.add(isCorrect ? "is-correct" : "is-wrong");
       }
+      if (selectedLabel !== currentQuestion.answer && option.label === currentQuestion.answer) {
+        button.classList.add("is-correct");
+      }
     } else {
       button.addEventListener("click", () => {
         selectedAnswers[index] = option.label;
@@ -132,7 +128,6 @@ function render(shouldSpeak = true) {
 }
 
 prevBtn.addEventListener("click", () => {
-  if (!hasStartedQuiz) return;
   if (index > 0) {
     index -= 1;
     render(true);
@@ -140,7 +135,6 @@ prevBtn.addEventListener("click", () => {
 });
 
 nextBtn.addEventListener("click", () => {
-  if (!hasStartedQuiz) return;
   if (index < quizQuestions.length - 1) {
     index += 1;
     render(true);
@@ -148,42 +142,12 @@ nextBtn.addEventListener("click", () => {
 });
 
 replayBtn.addEventListener("click", () => {
-  if (!hasStartedQuiz) return;
   speakQuestion(quizQuestions[index]);
-});
-
-if (introVideoEl) {
-  const autoplayAttempt = introVideoEl.play();
-  if (autoplayAttempt && typeof autoplayAttempt.catch === "function") {
-    autoplayAttempt.catch(() => {
-      if (introHintEl) {
-        introHintEl.classList.remove("hidden");
-      }
-    });
-  }
-
-  introVideoEl.addEventListener("error", () => {
-    if (introHintEl) {
-      introHintEl.classList.remove("hidden");
-    }
-  });
-}
-
-startQuizBtn.addEventListener("click", () => {
-  hasStartedQuiz = true;
-  if (introVideoEl) {
-    introVideoEl.pause();
-  }
-  introSectionEl.classList.add("hidden");
-  quizSectionEl.classList.remove("hidden");
-  render(true);
 });
 
 if ("speechSynthesis" in window) {
   window.speechSynthesis.addEventListener("voiceschanged", () => {
-    if (hasStartedQuiz) {
-      render(false);
-    }
+    render(false);
   });
 }
 
@@ -192,3 +156,5 @@ window.addEventListener("beforeunload", () => {
     window.speechSynthesis.cancel();
   }
 });
+
+render(true);

@@ -44,39 +44,6 @@ h1 {
   margin-top: 20px;
 }
 
-.intro-wrap {
-  display: grid;
-  gap: 16px;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.intro-video {
-  display: block;
-  width: 100% !important;
-  max-width: 100%;
-  height: auto !important;
-  max-height: min(70vh, 520px);
-  border-radius: 12px;
-  background: #000;
-  object-fit: contain;
-  min-width: 0;
-}
-
-#introSection video {
-  display: block !important;
-  inline-size: 100% !important;
-  max-inline-size: 100% !important;
-  block-size: auto !important;
-}
-
-.intro-hint {
-  margin: 0;
-  color: #2d4ea6;
-  font-weight: 600;
-}
-
 .counter {
   font-weight: 600;
   color: #2d4ea6;
