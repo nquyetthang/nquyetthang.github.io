@@ -51,55 +51,51 @@ const quizQuestions = [
   }
 ];
 
-const questionVideos = [
-  "./question1.mp4",
-  "./question2.mp4",
-  "./question3.mp4",
-  "./question4.mp4",
-  "./question5.mp4"
-];
-
 const counterEl = document.getElementById("counter");
-const videoWrapEl = document.getElementById("videoWrap");
-const questionVideoEl = document.getElementById("questionVideo");
 const questionEl = document.getElementById("question");
 const optionsEl = document.getElementById("options");
+const introSectionEl = document.getElementById("introSection");
+const quizSectionEl = document.getElementById("quizSection");
+const introVideoEl = document.getElementById("introVideo");
+const introHintEl = document.getElementById("introHint");
+const startQuizBtn = document.getElementById("startQuizBtn");
 
 const prevBtn = document.getElementById("prevBtn");
 const replayBtn = document.getElementById("replayBtn");
 const nextBtn = document.getElementById("nextBtn");
 
 let index = 0;
-let lastRenderedQuestionIndex = -1;
+let hasStartedQuiz = false;
 const selectedAnswers = new Array(quizQuestions.length).fill(null);
 
-function render() {
+function buildSpeechText(question) {
+  const optionsText = question.options
+    .map((option) => `${option.label}. ${option.text}`)
+    .join(". ");
+  return `${question.question}. ${optionsText}`;
+}
+
+function speakQuestion(question) {
+  if (!("speechSynthesis" in window)) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(buildSpeechText(question));
+  utterance.lang = "vi-VN";
+  utterance.rate = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  const viVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith("vi"));
+  if (viVoice) utterance.voice = viVoice;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function render(shouldSpeak = true) {
   const currentQuestion = quizQuestions[index];
-  const currentVideo = questionVideos[index] || "";
   const selectedLabel = selectedAnswers[index];
-  const isQuestionChanged = lastRenderedQuestionIndex !== index;
 
   counterEl.textContent = `Câu ${index + 1}/${quizQuestions.length}`;
-
-  if (currentVideo) {
-    videoWrapEl.classList.remove("hidden");
-    if (isQuestionChanged) {
-      questionVideoEl.src = currentVideo;
-      questionVideoEl.load();
-      questionVideoEl.currentTime = 0;
-      questionVideoEl.play().catch(() => {
-        // Autoplay can be blocked by browser policy.
-      });
-    }
-  } else {
-    if (isQuestionChanged) {
-      questionVideoEl.pause();
-      questionVideoEl.removeAttribute("src");
-      questionVideoEl.load();
-      videoWrapEl.classList.add("hidden");
-    }
-  }
-
   questionEl.textContent = currentQuestion.question;
 
   optionsEl.innerHTML = "";
@@ -119,7 +115,7 @@ function render() {
     } else {
       button.addEventListener("click", () => {
         selectedAnswers[index] = option.label;
-        render();
+        render(false);
       });
     }
 
@@ -129,33 +125,70 @@ function render() {
 
   prevBtn.disabled = index === 0;
   nextBtn.disabled = index === quizQuestions.length - 1;
-  lastRenderedQuestionIndex = index;
+
+  if (shouldSpeak) {
+    speakQuestion(currentQuestion);
+  }
 }
 
 prevBtn.addEventListener("click", () => {
+  if (!hasStartedQuiz) return;
   if (index > 0) {
     index -= 1;
-    render();
+    render(true);
   }
 });
 
 nextBtn.addEventListener("click", () => {
+  if (!hasStartedQuiz) return;
   if (index < quizQuestions.length - 1) {
     index += 1;
-    render();
+    render(true);
   }
 });
 
 replayBtn.addEventListener("click", () => {
-  if (!questionVideoEl.getAttribute("src")) return;
-  questionVideoEl.currentTime = 0;
-  questionVideoEl.play().catch(() => {
-    // Playback can fail if browser blocks autoplay.
-  });
+  if (!hasStartedQuiz) return;
+  speakQuestion(quizQuestions[index]);
 });
+
+if (introVideoEl) {
+  const autoplayAttempt = introVideoEl.play();
+  if (autoplayAttempt && typeof autoplayAttempt.catch === "function") {
+    autoplayAttempt.catch(() => {
+      if (introHintEl) {
+        introHintEl.classList.remove("hidden");
+      }
+    });
+  }
+
+  introVideoEl.addEventListener("error", () => {
+    if (introHintEl) {
+      introHintEl.classList.remove("hidden");
+    }
+  });
+}
+
+startQuizBtn.addEventListener("click", () => {
+  hasStartedQuiz = true;
+  if (introVideoEl) {
+    introVideoEl.pause();
+  }
+  introSectionEl.classList.add("hidden");
+  quizSectionEl.classList.remove("hidden");
+  render(true);
+});
+
+if ("speechSynthesis" in window) {
+  window.speechSynthesis.addEventListener("voiceschanged", () => {
+    if (hasStartedQuiz) {
+      render(false);
+    }
+  });
+}
 
 window.addEventListener("beforeunload", () => {
-  questionVideoEl.pause();
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
 });
-
-render();

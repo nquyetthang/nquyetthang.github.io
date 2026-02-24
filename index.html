@@ -9,20 +9,32 @@
   <body>
     <main class="page">
       <section class="card">
-        <h1>Trắc nghiệm video</h1>
-        <p>Mỗi câu hỏi sẽ tự động chạy video tương ứng.</p>
+        <div id="introSection" class="intro-wrap">
+          <h1>Video mở đầu</h1>
+          <video
+            id="introVideo"
+            class="intro-video"
+            autoplay
+            playsinline
+            controls
+            preload="auto"
+          >
+            <source src="./intro.mp4" type="video/mp4" />
+            Trình duyệt của bạn không hỗ trợ phát video.
+          </video>
+          <button id="startQuizBtn" type="button">Vào phần câu hỏi</button>
+        </div>
 
-        <div class="quiz-wrap">
+        <div id="quizSection" class="quiz-wrap hidden">
+          <h1>Website trắc nghiệm đọc bằng giọng máy</h1>
+          <p>Mỗi lần chuyển câu hỏi, hệ thống sẽ tự động đọc tiếng Việt.</p>
           <p id="counter" class="counter"></p>
-          <div id="videoWrap" class="video-wrap hidden">
-            <video id="questionVideo" class="question-video" controls preload="metadata"></video>
-          </div>
           <h2 id="question" class="question"></h2>
           <ul id="options" class="option-list"></ul>
 
           <div class="actions">
             <button id="prevBtn" type="button">Câu trước</button>
-            <button id="replayBtn" type="button">Phát lại video</button>
+            <button id="replayBtn" type="button">Đọc lại</button>
             <button id="nextBtn" type="button">Câu tiếp</button>
           </div>
         </div>

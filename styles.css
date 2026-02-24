@@ -2,6 +2,7 @@
   color-scheme: light;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: radial-gradient(circle at top left, #f5f9ff, #e8f0ff 45%, #f6f8fb);
+  font-size: 20px;
 }
 
 * {
@@ -33,33 +34,43 @@ body {
 h1 {
   margin-top: 0;
   margin-bottom: 8px;
+  font-size: 2.3rem;
+  line-height: 1.2;
 }
 
 .quiz-wrap {
   margin-top: 20px;
 }
 
+.intro-wrap {
+  display: grid;
+  gap: 16px;
+}
+
+.intro-video {
+  width: 100%;
+  max-height: 70vh;
+  border-radius: 12px;
+  background: #000;
+}
+
+.intro-hint {
+  margin: 0;
+  color: #2d4ea6;
+  font-weight: 600;
+}
+
 .counter {
   font-weight: 600;
   color: #2d4ea6;
-}
-
-.video-wrap {
-  margin: 10px 0 14px;
-}
-
-.question-video {
-  width: 100%;
-  max-height: 340px;
-  border-radius: 12px;
-  border: 1px solid #d4dffb;
-  background: #000;
+  font-size: 1.35rem;
 }
 
 .question {
   margin-top: 8px;
   margin-bottom: 16px;
   line-height: 1.4;
+  font-size: 1.7rem;
 }
 
 .option-list {
@@ -78,16 +89,22 @@ h1 {
   font-weight: 700;
 }
 
+.hidden {
+  display: none;
+}
+
 .option-btn {
   width: 100%;
   text-align: left;
   border: 1px solid #d4dffb;
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: #f7faff;
   color: #1f2937;
   cursor: pointer;
   font-weight: 500;
+  font-size: 1.3rem;
+  line-height: 1.4;
 }
 
 .option-btn:hover {
@@ -95,24 +112,22 @@ h1 {
 }
 
 .option-btn.is-correct {
-  background: #d7f7e5;
-  border-color: #47b881;
-  color: #0b5a35;
+  background: #9ff7c2;
+  border-color: #18a957;
+  color: #064526;
+  font-weight: 700;
 }
 
 .option-btn.is-wrong {
-  background: #ffe2e2;
-  border-color: #e25d5d;
-  color: #8d1f1f;
+  background: #d88a8a;
+  border-color: #8f1f1f;
+  color: #4c0d0d;
+  font-weight: 700;
 }
 
 .option-btn:disabled {
   cursor: default;
   opacity: 1;
-}
-
-.hidden {
-  display: none;
 }
 
 .actions {
@@ -130,6 +145,7 @@ button {
   background: #2157d8;
   color: #fff;
   font-weight: 600;
+  font-size: 1.15rem;
 }
 
 button:disabled {
@@ -138,6 +154,10 @@ button:disabled {
 }
 
 @media (max-width: 600px) {
+  :root {
+    font-size: 18px;
+  }
+
   .card {
     padding: 16px;
   }
